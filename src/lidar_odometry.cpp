@@ -209,7 +209,10 @@ void LidarOdometry::timer_callback()
 
     publish_odometry(stamp);
 
+    // accumulate current leaves into global map and publish only when map is updated
     if (pipeline_->isMapUpdated()) {
+      const mad_icp_core::ContainerType current_leaves = pipeline_->currentLeaves();
+      global_map_.insert(global_map_.end(), current_leaves.begin(), current_leaves.end());
       publish_map(stamp);
     }
 
@@ -242,9 +245,9 @@ mad_icp_core::ContainerType LidarOdometry::convert_point_cloud(
   mad_icp_core::ContainerType cloud;
   cloud.reserve(msg->width * msg->height);
 
-  const uint8_t * data_ptr    = msg->data.data();
-  const uint32_t point_step   = msg->point_step;
-  const uint32_t num_points   = msg->width * msg->height;
+  const uint8_t * data_ptr = msg->data.data();
+  const uint32_t point_step = msg->point_step;
+  const uint32_t num_points = msg->width * msg->height;
 
   for (uint32_t i = 0; i < num_points; ++i) {
     const uint8_t * point_ptr = data_ptr + i * point_step;
@@ -309,17 +312,24 @@ void LidarOdometry::publish_odometry(const rclcpp::Time & stamp)
 
 void LidarOdometry::publish_map(const rclcpp::Time & stamp)
 {
-  const mad_icp_core::ContainerType leaves = pipeline_->modelLeaves();
+  // find z min and max for normalization — matching original mad-icp visualizer approach
+  double z_min = std::numeric_limits<double>::max();
+  double z_max = std::numeric_limits<double>::lowest();
+  for (const auto & point : global_map_) {
+    z_min = std::min(z_min, point.z());
+    z_max = std::max(z_max, point.z());
+  }
+  const double z_range = (z_max - z_min > 1e-6) ? (z_max - z_min) : 1.0;
 
   sensor_msgs::msg::PointCloud2 map_msg;
-  map_msg.header.stamp    = stamp;
+  map_msg.header.stamp = stamp;
   map_msg.header.frame_id = "map";
-  map_msg.height          = 1;
-  map_msg.width           = static_cast<uint32_t>(leaves.size());
-  map_msg.is_dense        = false;
-  map_msg.is_bigendian    = false;
+  map_msg.height = 1;
+  map_msg.width = static_cast<uint32_t>(global_map_.size());
+  map_msg.is_dense = false;
+  map_msg.is_bigendian = false;
 
-  // define fields: x, y, z as float32
+  // define fields: x, y, z, intensity as float32
   sensor_msgs::msg::PointField field;
   field.datatype = sensor_msgs::msg::PointField::FLOAT32;
   field.count    = 1;
@@ -336,18 +346,25 @@ void LidarOdometry::publish_map(const rclcpp::Time & stamp)
   field.offset = 8;
   map_msg.fields.push_back(field);
 
-  map_msg.point_step = 12;  // 3 * sizeof(float)
+  field.name   = "intensity";
+  field.offset = 12;
+  map_msg.fields.push_back(field);
+
+  map_msg.point_step = 16;  // 4 * sizeof(float)
   map_msg.row_step   = map_msg.point_step * map_msg.width;
   map_msg.data.resize(map_msg.row_step);
 
   uint8_t * data_ptr = map_msg.data.data();
-  for (const auto & point : leaves) {
+  for (const auto & point : global_map_) {
     const float x = static_cast<float>(point.x());
     const float y = static_cast<float>(point.y());
     const float z = static_cast<float>(point.z());
-    std::memcpy(data_ptr + 0, &x, sizeof(float));
-    std::memcpy(data_ptr + 4, &y, sizeof(float));
-    std::memcpy(data_ptr + 8, &z, sizeof(float));
+    // normalize z to [0, 1] matching original mad-icp visualizer
+    const float intensity = static_cast<float>((point.z() - z_min) / z_range);
+    std::memcpy(data_ptr + 0,  &x,         sizeof(float));
+    std::memcpy(data_ptr + 4,  &y,         sizeof(float));
+    std::memcpy(data_ptr + 8,  &z,         sizeof(float));
+    std::memcpy(data_ptr + 12, &intensity, sizeof(float));
     data_ptr += map_msg.point_step;
   }
 

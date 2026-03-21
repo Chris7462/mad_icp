@@ -41,7 +41,9 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         name='rviz2',
-        output='screen'
+        arguments=['-d', join(
+            get_package_share_directory('mad_icp'),
+            'rviz', 'mad_icp.rviz')]
     )
 
     return LaunchDescription([

@@ -112,6 +112,9 @@ private:
   // Path
   nav_msgs::msg::Path lidar_path_;
 
+  // Global accumulated map
+  mad_icp_core::ContainerType global_map_;
+
   // Parameters
   double sensor_hz_;
   bool deskew_;
