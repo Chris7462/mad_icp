@@ -196,10 +196,22 @@ void LidarOdometry::timer_callback()
 
     // accumulate current leaves into global map and publish only when map is updated
     if (pipeline_->isMapUpdated()) {
+      const mad_icp_core::ContainerType current_leaves = pipeline_->currentLeaves();
+
       pcl::PointCloud<pcl::PointXYZI> pcl_leaves;
-      pcl_leaves.points = pipeline_->currentLeaves();
-      pcl_leaves.width  = static_cast<uint32_t>(pcl_leaves.points.size());
+      pcl_leaves.reserve(current_leaves.size());
+      for (const auto & point : current_leaves) {
+        pcl::PointXYZI point_i;
+        point_i.x         = point.x;
+        point_i.y         = point.y;
+        point_i.z         = point.z;
+        point_i.intensity = static_cast<float>(
+          std::min(1.0, std::max((static_cast<double>(point.z) + 2.0) / 5.0, 0.0)));
+        pcl_leaves.push_back(point_i);
+      }
+      pcl_leaves.width  = static_cast<uint32_t>(pcl_leaves.size());
       pcl_leaves.height = 1;
+
       global_map_ += pcl_leaves;
       publish_map(stamp);
     }
@@ -214,8 +226,8 @@ void LidarOdometry::timer_callback()
 mad_icp_core::ContainerType LidarOdometry::convert_point_cloud(
   const sensor_msgs::msg::PointCloud2::ConstSharedPtr msg) const
 {
-  // convert PointCloud2 to pcl::PointCloud directly
-  pcl::PointCloud<pcl::PointXYZI> pcl_cloud;
+  // convert PointCloud2 directly to pcl::PointXYZ
+  pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
   pcl::fromROSMsg(*msg, pcl_cloud);
 
   // apply range filter and remove NaN points
