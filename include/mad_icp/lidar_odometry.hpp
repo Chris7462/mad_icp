@@ -128,6 +128,10 @@ private:
 
   // State
   std::atomic<bool> processing_in_progress_;
+
+  // Timing
+  double total_time_;
+  int total_frame_;
 };
 
 }  // namespace mad_icp

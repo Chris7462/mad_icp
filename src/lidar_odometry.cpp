@@ -16,7 +16,8 @@ namespace mad_icp
 {
 
 LidarOdometry::LidarOdometry()
-: Node("lidar_odometry_node"), processing_in_progress_(false)
+: Node("lidar_odometry_node"), processing_in_progress_(false),
+  total_time_(0.0), total_frame_(0)
 {
   initialize_parameters();
   initialize_ros_components();
@@ -190,7 +191,15 @@ void LidarOdometry::timer_callback()
       return;
     }
 
+    auto start = std::chrono::system_clock::now();
     pipeline_->compute(timestamp, cloud);
+    auto end = std::chrono::system_clock::now();
+
+    std::chrono::duration<float> elapsed = end - start;
+    total_frame_++;
+    total_time_ += elapsed.count() * 1000.0;
+    RCLCPP_INFO(get_logger(), "Average odometry estimation time: %.4f ms",
+      total_time_ / total_frame_);
 
     publish_odometry(stamp);
 
