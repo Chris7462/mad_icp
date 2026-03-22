@@ -21,6 +21,11 @@
 #include <nav_msgs/msg/path.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 
+// pcl header
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl_conversions/pcl_conversions.h>
+
 // c++ header
 #include <atomic>
 #include <memory>
@@ -73,7 +78,7 @@ private:
   /**
    * @brief Convert PointCloud2 message to ContainerType
    * @param msg Incoming point cloud message
-   * @return Filtered vector of Eigen::Vector3d points
+   * @return Filtered vector of pcl::PointXYZI points
    */
   mad_icp_core::ContainerType convert_point_cloud(
     const sensor_msgs::msg::PointCloud2::ConstSharedPtr msg) const;
@@ -85,7 +90,7 @@ private:
   void publish_odometry(const rclcpp::Time & stamp);
 
   /**
-   * @brief Publish map point cloud
+   * @brief Accumulate current leaves into global map and publish
    * @param stamp Timestamp of the point cloud
    */
   void publish_map(const rclcpp::Time & stamp);
@@ -113,13 +118,13 @@ private:
   nav_msgs::msg::Path lidar_path_;
 
   // Global accumulated map
-  mad_icp_core::ContainerType global_map_;
+  pcl::PointCloud<pcl::PointXYZI> global_map_;
 
   // Parameters
   double sensor_hz_;
   bool deskew_;
-  double min_range_;
-  double max_range_;
+  float min_range_;
+  float max_range_;
   double b_max_;
   double b_min_;
   double b_ratio_;

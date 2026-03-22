@@ -15,7 +15,8 @@ find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_eigen REQUIRED)
-find_package(Eigen3 REQUIRED)
+find_package(pcl_conversions REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common)
 find_package(mad_icp_core REQUIRED)
 
 # lidar_odometry_node
@@ -32,16 +33,19 @@ ament_target_dependencies(lidar_odometry_node
   tf2
   tf2_ros
   tf2_eigen
+  pcl_conversions
 )
 
 target_include_directories(lidar_odometry_node
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
+    ${PCL_INCLUDE_DIRS}
 )
 
 target_link_libraries(lidar_odometry_node
   mad_icp_core::mad_icp_core
+  ${PCL_LIBRARIES}
 )
 
 target_compile_features(lidar_odometry_node PUBLIC cxx_std_17)
