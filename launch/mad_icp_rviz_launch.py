@@ -12,6 +12,8 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
+    pkg_share = get_package_share_directory('mad_icp')
+
     declare_use_sim_time = DeclareLaunchArgument(
         'use_sim_time',
         default_value='true',
@@ -19,19 +21,18 @@ def generate_launch_description():
     )
 
     bag_exec = ExecuteProcess(
-        cmd=['ros2', 'bag', 'play',
+        cmd=['ros2', 'bag', 'play', '-r', '1.0',
              '/data/kitti/raw/2011_09_30_drive_0018_sync_bag',
              '--topics', '/kitti/velo',
-             '--clock']
+             '--clock',
+             '--qos-profile-overrides-path',
+             join(pkg_share, 'config', 'qos_override_offline.yaml')]
     )
 
     mad_icp_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('mad_icp'), 'launch',
-                'mad_icp_launch.py'
-            ])
-        ]),
+        PythonLaunchDescriptionSource(
+            join(pkg_share, 'launch', 'mad_icp_launch.py')
+        ),
         launch_arguments={
             'use_sim_time': LaunchConfiguration('use_sim_time')
         }.items()
@@ -41,9 +42,7 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         name='rviz2',
-        arguments=['-d', join(
-            get_package_share_directory('mad_icp'),
-            'rviz', 'mad_icp.rviz')]
+        arguments=['-d', join(pkg_share, 'rviz', 'mad_icp.rviz')]
     )
 
     return LaunchDescription([

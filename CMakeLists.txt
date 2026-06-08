@@ -25,17 +25,6 @@ add_executable(lidar_odometry_node
   src/lidar_odometry.cpp
 )
 
-ament_target_dependencies(lidar_odometry_node
-  rclcpp
-  sensor_msgs
-  nav_msgs
-  geometry_msgs
-  tf2
-  tf2_ros
-  tf2_eigen
-  pcl_conversions
-)
-
 target_include_directories(lidar_odometry_node
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -44,6 +33,14 @@ target_include_directories(lidar_odometry_node
 )
 
 target_link_libraries(lidar_odometry_node
+  rclcpp::rclcpp
+  ${sensor_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
+  ${geometry_msgs_TARGETS}
+  tf2::tf2
+  tf2_ros::tf2_ros
+  tf2_eigen::tf2_eigen
+  ${pcl_conversions_TARGETS}
   mad_icp_core::mad_icp_core
   ${PCL_LIBRARIES}
 )
@@ -60,20 +57,19 @@ target_compile_options(lidar_odometry_node PRIVATE
 )
 
 install(TARGETS lidar_odometry_node
-  DESTINATION lib/${PROJECT_NAME}
-)
+  DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
-)
+  DESTINATION share/${PROJECT_NAME})
 
-install(DIRECTORY rviz
-  DESTINATION share/${PROJECT_NAME}
-)
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME})
 
 install(DIRECTORY params
-  DESTINATION share/${PROJECT_NAME}
-)
+  DESTINATION share/${PROJECT_NAME})
+
+install(DIRECTORY rviz
+  DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

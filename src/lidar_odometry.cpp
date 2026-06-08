@@ -105,7 +105,7 @@ void LidarOdometry::initialize_ros_components()
 {
   // configure QoS profile
   rclcpp::QoS lidar_qos(queue_size_);
-  lidar_qos.reliability(rclcpp::ReliabilityPolicy::Reliable);
+  lidar_qos.reliability(rclcpp::ReliabilityPolicy::BestEffort);
   lidar_qos.durability(rclcpp::DurabilityPolicy::Volatile);
   lidar_qos.history(rclcpp::HistoryPolicy::KeepLast);
 
