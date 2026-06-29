@@ -8,6 +8,7 @@
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
   <depend>nav_msgs</depend>
@@ -15,9 +16,12 @@
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>tf2_eigen</depend>
-  <depend>eigen</depend>
-  <depend>libpcl-all-dev</depend>
   <depend>pcl_conversions</depend>
+
+  <!-- system dependency -->
+  <depend>libpcl-all-dev</depend>
+
+  <!-- local library dependency-->
   <depend>mad_icp_core</depend>
 
   <exec_depend>ros2launch</exec_depend>
