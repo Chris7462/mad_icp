@@ -105,7 +105,7 @@ void LidarOdometry::initialize_ros_components()
 {
   // configure QoS profile
   rclcpp::QoS lidar_qos(queue_size_);
-  lidar_qos.reliability(rclcpp::ReliabilityPolicy::Reliable);
+  lidar_qos.reliability(rclcpp::ReliabilityPolicy::BestEffort);
   lidar_qos.durability(rclcpp::DurabilityPolicy::Volatile);
   lidar_qos.history(rclcpp::HistoryPolicy::KeepLast);
 
@@ -295,6 +295,11 @@ void LidarOdometry::publish_odometry(const rclcpp::Time & stamp)
 
 void LidarOdometry::publish_map(const rclcpp::Time & stamp)
 {
+  if (global_map_.points.empty()) {
+    RCLCPP_INFO(get_logger(), "Skipping map publish: global_map_ is empty");
+    return;
+  }
+
   sensor_msgs::msg::PointCloud2 map_msg;
   pcl::toROSMsg(global_map_, map_msg);
   map_msg.header.stamp    = stamp;
