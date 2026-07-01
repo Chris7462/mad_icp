@@ -161,8 +161,14 @@ void LidarOdometry::lidar_callback(
 
 void LidarOdometry::timer_callback()
 {
-  // skip if already processing — pipeline_ is not thread-safe
-  if (processing_in_progress_.load()) {
+  // Atomically claim the "processing" slot: only proceed if we're the one
+  // that flips it from false -> true. This closes the race where two
+  // reentrant-callback-group threads could both pass a separate load()
+  // check before either had a chance to store(true) — letting
+  // pipeline_->compute() (which is documented as not thread-safe) run
+  // concurrently from two threads.
+  bool expected = false;
+  if (!processing_in_progress_.compare_exchange_strong(expected, true)) {
     return;
   }
 
@@ -171,13 +177,12 @@ void LidarOdometry::timer_callback()
   {
     std::lock_guard<std::mutex> lock(mutex_lock_);
     if (point_cloud_buf_.empty()) {
+      processing_in_progress_.store(false);
       return;
     }
     msg = point_cloud_buf_.front();
     point_cloud_buf_.pop();
   }
-
-  processing_in_progress_.store(true);
 
   const rclcpp::Time stamp = msg->header.stamp;
   const double timestamp  = stamp.seconds();
