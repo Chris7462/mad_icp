@@ -16,14 +16,14 @@ def generate_launch_description():
     )
 
     params = join(
-        get_package_share_directory('mad_icp'), 'params',
+        get_package_share_directory('mad_icp'), 'param',
         'mad_icp_params.yaml'
     )
 
-    lidar_odometry_node = Node(
+    mad_icp_node = Node(
         package='mad_icp',
-        executable='lidar_odometry_node',
-        name='lidar_odometry_node',
+        executable='mad_icp_node',
+        name='mad_icp_node',
         output='screen',
         parameters=[
             params,
@@ -33,5 +33,5 @@ def generate_launch_description():
 
     return LaunchDescription([
         declare_use_sim_time,
-        lidar_odometry_node
+        mad_icp_node
     ])

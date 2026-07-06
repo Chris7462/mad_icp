@@ -33,10 +33,10 @@ LidarOdometry::~LidarOdometry()
 void LidarOdometry::initialize_parameters()
 {
   // sensor parameters
-  sensor_hz_  = declare_parameter<double>("sensor_hz", 10.0);
+  sensor_hz_ = declare_parameter<double>("sensor_hz", 10.0);
   deskew_ = declare_parameter<bool>("deskew", false);
-  min_range_  = static_cast<float>(declare_parameter<double>("min_range", 0.7));
-  max_range_  = static_cast<float>(declare_parameter<double>("max_range", 120.0));
+  min_range_ = static_cast<float>(declare_parameter<double>("min_range", 0.7));
+  max_range_ = static_cast<float>(declare_parameter<double>("max_range", 120.0));
 
   // mad-icp algorithm parameters
   b_max_ = declare_parameter<double>("b_max", 0.2);
@@ -122,7 +122,7 @@ void LidarOdometry::initialize_ros_components()
 
   odom_pub_ = create_publisher<nav_msgs::msg::Odometry>(output_odom_topic_, lidar_qos);
   path_pub_ = create_publisher<nav_msgs::msg::Path>(output_path_topic_, lidar_qos);
-  map_pub_  = create_publisher<sensor_msgs::msg::PointCloud2>(output_map_topic_, lidar_qos);
+  map_pub_ = create_publisher<sensor_msgs::msg::PointCloud2>(output_map_topic_, lidar_qos);
 
   tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
@@ -185,7 +185,7 @@ void LidarOdometry::timer_callback()
   }
 
   const rclcpp::Time stamp = msg->header.stamp;
-  const double timestamp  = stamp.seconds();
+  const double timestamp = stamp.seconds();
 
   try {
     mad_icp_core::ContainerType cloud = convert_point_cloud(msg);
@@ -216,14 +216,14 @@ void LidarOdometry::timer_callback()
       pcl_leaves.reserve(current_leaves.size());
       for (const auto & point : current_leaves) {
         pcl::PointXYZI point_i;
-        point_i.x         = point.x;
-        point_i.y         = point.y;
-        point_i.z         = point.z;
+        point_i.x = point.x;
+        point_i.y = point.y;
+        point_i.z = point.z;
         point_i.intensity = static_cast<float>(
           std::min(1.0, std::max((static_cast<double>(point.z) + 2.0) / 5.0, 0.0)));
         pcl_leaves.push_back(point_i);
       }
-      pcl_leaves.width  = static_cast<uint32_t>(pcl_leaves.size());
+      pcl_leaves.width = static_cast<uint32_t>(pcl_leaves.size());
       pcl_leaves.height = 1;
 
       global_map_ += pcl_leaves;
@@ -285,7 +285,7 @@ void LidarOdometry::publish_odometry(const rclcpp::Time & stamp)
   nav_msgs::msg::Odometry odom_msg;
   odom_msg.header.stamp = stamp;
   odom_msg.header.frame_id = "map";
-  odom_msg.child_frame_id  = "base_link";
+  odom_msg.child_frame_id = "base_link";
   odom_msg.pose.pose = tf2::toMsg(pose);
   odom_pub_->publish(odom_msg);
 
@@ -307,7 +307,7 @@ void LidarOdometry::publish_map(const rclcpp::Time & stamp)
 
   sensor_msgs::msg::PointCloud2 map_msg;
   pcl::toROSMsg(global_map_, map_msg);
-  map_msg.header.stamp    = stamp;
+  map_msg.header.stamp = stamp;
   map_msg.header.frame_id = "map";
   map_pub_->publish(map_msg);
 }

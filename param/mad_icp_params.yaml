@@ -1,4 +1,4 @@
-lidar_odometry_node:
+mad_icp_node:
   ros__parameters:
     # Sensor parameters
     sensor_hz: 10.0
@@ -14,7 +14,7 @@ lidar_odometry_node:
     num_keyframes: 4  # max number of keyframes kept in the local map
     num_threads: 4    # how many threads to use for icp
     # Processing parameters
-    processing_frequency: 50.0  # Hz
+    processing_frequency: 40.0  # Hz
     max_processing_queue_size: 3
     # QoS parameters
     queue_size: 10

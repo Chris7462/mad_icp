@@ -1,5 +1,15 @@
 cmake_minimum_required(VERSION 3.20)
-project(mad_icp)
+
+project(mad_icp
+  VERSION 1.0.0
+  DESCRIPTION "ROS2 wrapper for mad_icp_core"
+  LANGUAGES C CXX)  # C is needed for pcl_conversions
+
+# Default to a Release build if the user doesn't specify one
+if(NOT CMAKE_BUILD_TYPE)
+  message(STATUS "No build type specified, defaulting to 'Release'.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+endif()
 
 # Find dependencies
 find_package(ament_cmake REQUIRED)
@@ -15,15 +25,14 @@ find_package(PCL REQUIRED COMPONENTS common)
 find_package(mad_icp_core REQUIRED)
 
 # lidar_odometry_node
-add_executable(lidar_odometry_node
+add_executable(${PROJECT_NAME}_node
   src/lidar_odometry_node.cpp
   src/lidar_odometry.cpp)
 
-target_include_directories(lidar_odometry_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+target_include_directories(${PROJECT_NAME}_node PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_link_libraries(lidar_odometry_node
+target_link_libraries(${PROJECT_NAME}_node PRIVATE
   ${rclcpp_TARGETS}
   ${sensor_msgs_TARGETS}
   ${nav_msgs_TARGETS}
@@ -35,16 +44,14 @@ target_link_libraries(lidar_odometry_node
   ${mad_icp_core_TARGETS}
   pcl_common)
 
-target_compile_features(lidar_odometry_node PUBLIC cxx_std_17)
+target_compile_features(${PROJECT_NAME}_node PUBLIC cxx_std_17)
 
-target_compile_options(lidar_odometry_node PRIVATE
-  $<$<COMPILE_LANGUAGE:CXX>:
-    -Wall
-    -Wextra
-    -Wpedantic
-  >)
+target_compile_options(${PROJECT_NAME}_node PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic)
 
-install(TARGETS lidar_odometry_node
+install(TARGETS ${PROJECT_NAME}_node
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch
@@ -53,7 +60,7 @@ install(DIRECTORY launch
 install(DIRECTORY config
   DESTINATION share/${PROJECT_NAME})
 
-install(DIRECTORY params
+install(DIRECTORY param
   DESTINATION share/${PROJECT_NAME})
 
 install(DIRECTORY rviz
