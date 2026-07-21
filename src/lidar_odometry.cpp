@@ -54,7 +54,7 @@ void LidarOdometry::initialize_parameters()
   queue_size_ = declare_parameter<int>("queue_size", 10);
 
   // topic parameters
-  input_topic_ = declare_parameter<std::string>("input_topic", "points");
+  input_topic_ = declare_parameter<std::string>("input_topic", std::string(""));
   output_odom_topic_ = declare_parameter<std::string>("output_odom_topic", "odom");
   output_path_topic_ = declare_parameter<std::string>("output_path_topic", "odom_path");
   output_map_topic_ = declare_parameter<std::string>("output_map_topic", "map");
@@ -79,6 +79,13 @@ void LidarOdometry::initialize_parameters()
 
   if (num_threads_ <= 0) {
     throw std::runtime_error("num_threads must be greater than 0");
+  }
+
+  if (input_topic_.empty()) {
+    throw std::runtime_error(
+      "input_topic is empty. This must be remapped by the launch file "
+      "(e.g. input_topic:=/carla/hero/lidar/point_cloud) - refusing to "
+      "start with an unspecified input source.");
   }
 
   // initialize pipeline
